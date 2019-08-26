@@ -60,8 +60,11 @@ namespace Nop.Core.Caching
 
             var keys = server.Keys(_db.Database, string.IsNullOrEmpty(prefix) ? null : $"{prefix}*");
 
-            //we should always persist the data protection key list
-            keys = keys.Where(key => !key.ToString().Equals(NopCachingDefaults.RedisDataProtectionKey, StringComparison.OrdinalIgnoreCase));
+            if (prefix == null || NopCachingDefaults.RedisDataProtectionKey.StartsWith(prefix))
+            {
+                //we should always persist the data protection key list
+                keys = keys.Where(key => !key.ToString().Equals(NopCachingDefaults.RedisDataProtectionKey, StringComparison.OrdinalIgnoreCase));
+            }
 
             return keys;
         }
@@ -278,7 +281,7 @@ namespace Nop.Core.Caching
 
             foreach (var endPoint in _connectionWrapper.GetEndPoints())
             {
-                var keys = GetKeys(endPoint, prefix);
+                var keys = GetKeys(endPoint, prefix).ToArray();
 
                 _db.KeyDelete(keys.ToArray());
             }
