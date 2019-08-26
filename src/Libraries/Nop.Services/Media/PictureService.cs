@@ -554,7 +554,6 @@ namespace Nop.Services.Media
             byte[] pictureBinary = null;
             if (picture.IsNew)
             {
-                DeletePictureThumbs(picture);
                 pictureBinary = LoadPictureBinary(picture);
 
                 if ((pictureBinary?.Length ?? 0) == 0)
@@ -894,7 +893,7 @@ namespace Nop.Services.Media
                 return null;
 
             //delete old thumbs if a picture has been changed
-            if (seoFilename != picture.SeoFilename)
+            if (seoFilename != picture.SeoFilename || picture.IsNew)
                 DeletePictureThumbs(picture);
 
             picture.MimeType = mimeType;
