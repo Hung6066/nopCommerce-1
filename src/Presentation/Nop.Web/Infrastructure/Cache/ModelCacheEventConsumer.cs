@@ -228,20 +228,57 @@ namespace Nop.Web.Infrastructure.Cache
         public void HandleEvent(EntityUpdatedEvent<Setting> eventMessage)
         {
             //clear models which depend on settings
-            _cacheManager.RemoveByPrefix(NopModelCacheDefaults.ProductTagPopularPrefixCacheKey); //depends on CatalogSettings.NumberOfProductTags
-            _cacheManager.RemoveByPrefix(NopModelCacheDefaults.ManufacturerNavigationPrefixCacheKey); //depends on CatalogSettings.ManufacturersBlockItemsToDisplay
-            _cacheManager.RemoveByPrefix(NopModelCacheDefaults.VendorNavigationPrefixCacheKey); //depends on VendorSettings.VendorBlockItemsToDisplay
-            _cacheManager.RemoveByPrefix(NopModelCacheDefaults.CategoryAllPrefixCacheKey); //depends on CatalogSettings.ShowCategoryProductNumber and CatalogSettings.ShowCategoryProductNumberIncludingSubcategories
-            _cacheManager.RemoveByPrefix(NopModelCacheDefaults.CategoryXmlAllPrefixCacheKey);
-            _cacheManager.RemoveByPrefix(NopModelCacheDefaults.CategoryNumberOfProductsPrefixCacheKey); //depends on CatalogSettings.ShowCategoryProductNumberIncludingSubcategories
-            _cacheManager.RemoveByPrefix(NopModelCacheDefaults.HomepageBestsellersIdsPrefixCacheKey); //depends on CatalogSettings.NumberOfBestsellersOnHomepage
-            _cacheManager.RemoveByPrefix(NopModelCacheDefaults.ProductsAlsoPurchasedIdsPrefixCacheKey); //depends on CatalogSettings.ProductsAlsoPurchasedNumber
-            _cacheManager.RemoveByPrefix(NopModelCacheDefaults.ProductsRelatedIdsPrefixCacheKey);
-            _cacheManager.RemoveByPrefix(NopModelCacheDefaults.BlogPrefixCacheKey); //depends on BlogSettings.NumberOfTags
-            _cacheManager.RemoveByPrefix(NopModelCacheDefaults.NewsPrefixCacheKey); //depends on NewsSettings.MainPageNewsCount
-            _cacheManager.RemoveByPrefix(NopModelCacheDefaults.SitemapPrefixCacheKey); //depends on distinct sitemap settings
-            _cacheManager.RemoveByPrefix(NopModelCacheDefaults.WidgetPrefixCacheKey); //depends on WidgetSettings and certain settings of widgets
-            _cacheManager.RemoveByPrefix(NopModelCacheDefaults.StoreLogoPathPrefixCacheKey); //depends on StoreInformationSettings.LogoPictureId
+            if ("CatalogSettings.NumberOfProductTags".ToLower().Equals(eventMessage.Entity.Name))
+            {
+                _cacheManager.RemoveByPrefix(NopModelCacheDefaults.ProductTagPopularPrefixCacheKey); //depends on CatalogSettings.NumberOfProductTags
+            }
+            if ("CatalogSettings.ManufacturersBlockItemsToDisplay".ToLower().Equals(eventMessage.Entity.Name))
+            {
+                _cacheManager.RemoveByPrefix(NopModelCacheDefaults.ManufacturerNavigationPrefixCacheKey); //depends on CatalogSettings.ManufacturersBlockItemsToDisplay
+            }
+            if ("VendorSettings.VendorBlockItemsToDisplay".ToLower().Equals(eventMessage.Entity.Name))
+            {
+                _cacheManager.RemoveByPrefix(NopModelCacheDefaults.VendorNavigationPrefixCacheKey); //depends on VendorSettings.VendorBlockItemsToDisplay
+            }
+            if ("CatalogSettings.ShowCategoryProductNumber".ToLower().Equals(eventMessage.Entity.Name) ||
+                "CatalogSettings.ShowCategoryProductNumberIncludingSubcategories".ToLower().Equals(eventMessage.Entity.Name))
+            {
+                _cacheManager.RemoveByPrefix(NopModelCacheDefaults.CategoryAllPrefixCacheKey); //depends on CatalogSettings.ShowCategoryProductNumber and CatalogSettings.ShowCategoryProductNumberIncludingSubcategories
+                _cacheManager.RemoveByPrefix(NopModelCacheDefaults.CategoryXmlAllPrefixCacheKey);
+            }
+            if ("CatalogSettings.ShowCategoryProductNumberIncludingSubcategories".ToLower().Equals(eventMessage.Entity.Name))
+            {
+                _cacheManager.RemoveByPrefix(NopModelCacheDefaults.CategoryNumberOfProductsPrefixCacheKey); //depends on CatalogSettings.ShowCategoryProductNumberIncludingSubcategories
+            }
+            if ("CatalogSettings.NumberOfBestsellersOnHomepage".ToLower().Equals(eventMessage.Entity.Name))
+            {
+                _cacheManager.RemoveByPrefix(NopModelCacheDefaults.HomepageBestsellersIdsPrefixCacheKey); //depends on CatalogSettings.NumberOfBestsellersOnHomepage
+            }
+            if ("CatalogSettings.ProductsAlsoPurchasedNumber".ToLower().Equals(eventMessage.Entity.Name))
+            {
+                _cacheManager.RemoveByPrefix(NopModelCacheDefaults.ProductsAlsoPurchasedIdsPrefixCacheKey); //depends on CatalogSettings.ProductsAlsoPurchasedNumber
+                _cacheManager.RemoveByPrefix(NopModelCacheDefaults.ProductsRelatedIdsPrefixCacheKey);
+            }
+            if ("BlogSettings.NumberOfTags".ToLower().Equals(eventMessage.Entity.Name))
+            {
+                _cacheManager.RemoveByPrefix(NopModelCacheDefaults.BlogPrefixCacheKey); //depends on BlogSettings.NumberOfTags
+            }
+            if ("NewsSettings.MainPageNewsCount".ToLower().Equals(eventMessage.Entity.Name))
+            {
+                _cacheManager.RemoveByPrefix(NopModelCacheDefaults.NewsPrefixCacheKey); //depends on NewsSettings.MainPageNewsCount
+            }
+            if (eventMessage.Entity.Name.StartsWith("sitemapsettings"))
+            {
+                _cacheManager.RemoveByPrefix(NopModelCacheDefaults.SitemapPrefixCacheKey); //depends on distinct sitemap settings
+            }
+            if (eventMessage.Entity.Name.StartsWith("widgetsettings"))
+            {
+                _cacheManager.RemoveByPrefix(NopModelCacheDefaults.WidgetPrefixCacheKey); //depends on WidgetSettings and certain settings of widgets
+            }
+            if ("StoreInformationSettings.LogoPictureId".ToLower().Equals(eventMessage.Entity.Name))
+            {
+                _cacheManager.RemoveByPrefix(NopModelCacheDefaults.StoreLogoPathPrefixCacheKey); //depends on StoreInformationSettings.LogoPictureId
+            }
         }
 
         //vendors

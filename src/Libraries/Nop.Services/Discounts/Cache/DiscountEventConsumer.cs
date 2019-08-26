@@ -98,8 +98,12 @@ namespace Nop.Services.Discounts.Cache
 
         public void HandleEvent(EntityUpdatedEvent<Setting> eventMessage)
         {
-            _cacheManager.RemoveByPrefix(NopDiscountDefaults.DiscountCategoryIdsPrefixCacheKey);
-            _cacheManager.RemoveByPrefix(NopDiscountDefaults.DiscountManufacturerIdsPrefixCacheKey);
+            if ("CatalogSettings.IgnoreDiscounts".ToLower().Equals(eventMessage.Entity.Name) ||
+                "ShoppingCartSettings.ShowDiscountBox".ToLower().Equals(eventMessage.Entity.Name))
+            {
+                _cacheManager.RemoveByPrefix(NopDiscountDefaults.DiscountCategoryIdsPrefixCacheKey);
+                _cacheManager.RemoveByPrefix(NopDiscountDefaults.DiscountManufacturerIdsPrefixCacheKey);
+            }
         }
 
         #endregion
