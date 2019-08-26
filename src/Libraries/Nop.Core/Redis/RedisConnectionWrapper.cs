@@ -103,7 +103,7 @@ namespace Nop.Core.Redis
         /// <returns>Redis cache database</returns>
         public IDatabase GetDatabase(int db)
         {
-            return GetConnection().GetDatabase(db);
+            return new StackRedis.L1.RedisL1Database(GetConnection().GetDatabase(db));
         }
 
         /// <summary>
