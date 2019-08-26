@@ -21,7 +21,7 @@
         /// <summary>
         /// Gets a multiple thumb directories length
         /// </summary>
-        public static int MultipleThumbDirectoriesLength => 3;
+        public static int MultipleThumbDirectoriesLength => 4;
 
         /// <summary>
         /// Gets a path to the image thumbs files
