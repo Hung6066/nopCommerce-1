@@ -61,9 +61,12 @@ namespace Nop.Services.Catalog.Cache
 
         public void HandleEvent(EntityUpdatedEvent<Setting> eventMessage)
         {
-            _cacheManager.RemoveByPrefix(NopCatalogDefaults.ProductPricePrefixCacheKey);
-            _cacheManager.RemoveByPrefix(NopCatalogDefaults.ProductCategoryIdsPrefixCacheKey);
-            _cacheManager.RemoveByPrefix(NopCatalogDefaults.ProductManufacturerIdsPrefixCacheKey);
+            if ("CatalogSettings.CacheProductPrices".ToLower().Equals(eventMessage.Entity.Name))
+            {
+                _cacheManager.RemoveByPrefix(NopCatalogDefaults.ProductPricePrefixCacheKey);
+                _cacheManager.RemoveByPrefix(NopCatalogDefaults.ProductCategoryIdsPrefixCacheKey);
+                _cacheManager.RemoveByPrefix(NopCatalogDefaults.ProductManufacturerIdsPrefixCacheKey);
+            }
         }
 
         #region Categories
