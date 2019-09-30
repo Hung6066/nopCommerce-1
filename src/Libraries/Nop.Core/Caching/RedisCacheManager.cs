@@ -22,6 +22,8 @@ namespace Nop.Core.Caching
         private readonly IRedisConnectionWrapper _connectionWrapper;
         private readonly IDatabase _db;
 
+        private readonly int _redisPageSize;
+
         #endregion
 
         #region Ctor
@@ -39,6 +41,8 @@ namespace Nop.Core.Caching
             _connectionWrapper = connectionWrapper;
 
             _db = _connectionWrapper.GetDatabase(config.RedisDatabaseId ?? (int)RedisDatabaseNumber.Cache);
+
+            _redisPageSize = config.RedisPageSize ?? 10;
         }
 
         #endregion
@@ -58,7 +62,7 @@ namespace Nop.Core.Caching
             //we can use the code below (commented), but it requires administration permission - ",allowAdmin=true"
             //server.FlushDatabase();
 
-            var keys = server.Keys(_db.Database, string.IsNullOrEmpty(prefix) ? null : $"{prefix}*");
+            var keys = server.Keys(_db.Database, string.IsNullOrEmpty(prefix) ? null : $"{prefix}*", _redisPageSize);
 
             //we should always persist the data protection key list
             keys = keys.Where(key => !key.ToString().Equals(NopCachingDefaults.RedisDataProtectionKey, StringComparison.OrdinalIgnoreCase));

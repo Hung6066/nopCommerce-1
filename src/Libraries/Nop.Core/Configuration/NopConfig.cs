@@ -44,6 +44,10 @@ namespace Nop.Core.Configuration
         /// </summary>
         public int? RedisDatabaseId { get; set; }
         /// <summary>
+        /// Gets or sets the Redis Page Size. Bigger page sizes means less latency but too large pages fragment packets.
+        /// </summary>
+        public int? RedisPageSize { get; set; }
+        /// <summary>
         /// Gets or sets a value indicating whether the data protection system should be configured to persist keys in the Redis database
         /// </summary>
         public bool UseRedisToStoreDataProtectionKeys { get; set; }
