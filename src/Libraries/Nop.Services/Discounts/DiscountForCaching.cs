@@ -41,8 +41,6 @@ namespace Nop.Services.Discounts
 
         public bool AppliedToSubCategories { get; set; }
 
-        public string AdminComment { get; set; }
-
         public DiscountType DiscountType
         {
             get => (DiscountType)DiscountTypeId;

@@ -229,25 +229,7 @@ columns: [
             @if (column.Encode && column.Render == null)
             {
                 <text>
-                render: function (data, type, row, meta) {
-                    var entityMap = {
-                        '&': '&amp;',
-                        '<': '&lt;',
-                        '>': '&gt;',
-                        '"': '&quot;',
-                        "'": '&#39;',
-                        '/': '&#x2F;',
-                        '`': '&#x60;',
-                        '=': '&#x3D;'
-                    };
-
-                    function escapeHtml (string) {
-                        return String(string).replace(/[&<>"'`=\/]/g, function (s) {
-                        return entityMap[s];
-                        });
-                    }
-                    return escapeHtml(data)
-                },
+                render: $.fn.dataTable.render.text(),
                 </text>
             }
             @switch (column.Render)

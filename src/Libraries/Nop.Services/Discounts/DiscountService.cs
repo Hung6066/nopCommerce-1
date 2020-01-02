@@ -494,8 +494,7 @@ namespace Nop.Services.Discounts
                 DiscountLimitationId = discount.DiscountLimitationId,
                 LimitationTimes = discount.LimitationTimes,
                 MaximumDiscountedQuantity = discount.MaximumDiscountedQuantity,
-                AppliedToSubCategories = discount.AppliedToSubCategories,
-                AdminComment = discount.AdminComment
+                AppliedToSubCategories = discount.AppliedToSubCategories
             };
         }
 
