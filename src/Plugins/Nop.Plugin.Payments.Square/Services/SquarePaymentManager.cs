@@ -7,9 +7,9 @@ using Nop.Core;
 using Nop.Plugin.Payments.Square.Domain;
 using Nop.Services.Configuration;
 using Nop.Services.Logging;
-using Square.Connect.Api;
-using Square.Connect.Client;
-using Square.Connect.Model;
+using Square;
+using Square.Exceptions;
+using Square.Models;
 
 namespace Nop.Plugin.Payments.Square.Services
 {
@@ -52,7 +52,7 @@ namespace Nop.Plugin.Payments.Square.Services
         /// </summary>
         /// <param name="storeId">Store identifier for which configuration should be loaded</param>
         /// <returns>The API Configuration</returns>
-        private Configuration CreateApiConfiguration(int storeId)
+        public SquareClient CreateClient(int storeId)
         {
             var settings = _settingService.LoadSetting<SquarePaymentSettings>(storeId);
 
@@ -60,15 +60,20 @@ namespace Nop.Plugin.Payments.Square.Services
             if (settings.UseSandbox && string.IsNullOrEmpty(settings.AccessToken))
                 throw new NopException("Sandbox access token should not be empty");
 
-            var config = new Configuration
-            {
-                AccessToken = settings.AccessToken,
-                UserAgent = SquarePaymentDefaults.UserAgent
-            };
-            if (settings.UseSandbox)
-                config.setApiClientUsingDefault(new ApiClient(SquarePaymentDefaults.SandboxBaseUrl));
+            string token = settings.AccessToken;
+            global::Square.Environment environment = global::Square.Environment.Sandbox;
 
-            return config;
+            if (!settings.UseSandbox)
+            {
+                environment = global::Square.Environment.Production;
+            }
+
+            SquareClient squareClient = new SquareClient.Builder()
+                .Environment(environment)
+                .AccessToken(token)
+                .Build();
+
+            return squareClient;
         }
 
         #endregion
@@ -87,8 +92,8 @@ namespace Nop.Plugin.Payments.Square.Services
             try
             {
                 //create location API
-                var configuration = CreateApiConfiguration(storeId);
-                var locationsApi = new LocationsApi(configuration);
+                var client = CreateClient(storeId);
+                var locationsApi = client.LocationsApi;
 
                 //get list of all locations
                 var listLocationsResponse = locationsApi.ListLocations();
@@ -134,8 +139,8 @@ namespace Nop.Plugin.Payments.Square.Services
                     return null;
 
                 //create customer API
-                var configuration = CreateApiConfiguration(storeId);
-                var customersApi = new CustomersApi(configuration);
+                var client = CreateClient(storeId);
+                var customersApi = client.CustomersApi;
 
                 //get customer by identifier
                 var retrieveCustomerResponse = customersApi.RetrieveCustomer(customerId);
@@ -171,8 +176,8 @@ namespace Nop.Plugin.Payments.Square.Services
             try
             {
                 //create customer API
-                var configuration = CreateApiConfiguration(storeId);
-                var customersApi = new CustomersApi(configuration);
+                var client = CreateClient(storeId);
+                var customersApi = client.CustomersApi;
 
                 //create the new customer
                 var createCustomerResponse = customersApi.CreateCustomer(customerRequest);
@@ -209,8 +214,8 @@ namespace Nop.Plugin.Payments.Square.Services
             try
             {
                 //create customer API
-                var configuration = CreateApiConfiguration(storeId);
-                var customersApi = new CustomersApi(configuration);
+                var client = CreateClient(storeId);
+                var customersApi = client.CustomersApi;
 
                 //create the new card of the customer
                 var createCustomerCardResponse = customersApi.CreateCustomerCard(customerId, cardRequest);
@@ -257,8 +262,8 @@ namespace Nop.Plugin.Payments.Square.Services
                     throw new NopException("Location is a required parameter for payment requests");
 
                 //create transaction API
-                var configuration = CreateApiConfiguration(storeId);
-                var transactionsApi = new TransactionsApi(configuration);
+                var client = CreateClient(storeId);
+                var transactionsApi = client.TransactionsApi;
 
                 //get transaction by identifier
                 var retrieveTransactionResponse = transactionsApi.RetrieveTransaction(selectedLocation.Id, transactionId);
@@ -283,7 +288,7 @@ namespace Nop.Plugin.Payments.Square.Services
                 if (exception is ApiException apiException)
                 {
                     //try to get error details
-                    var response = JsonConvert.DeserializeObject<RetrieveTransactionResponse>(apiException.ErrorContent) as RetrieveTransactionResponse;
+                    var response = JsonConvert.DeserializeObject<RetrieveTransactionResponse>(apiException.Message) as RetrieveTransactionResponse;
                     if (response?.Errors?.Any() ?? false)
                         errorMessage = string.Join(";", response.Errors.Select(error => error.Detail));
                 }
@@ -292,58 +297,6 @@ namespace Nop.Plugin.Payments.Square.Services
             }
         }
 
-        /// <summary>
-        /// Charge transaction
-        /// </summary>
-        /// <param name="chargeRequest">Request parameters to charge transaction</param>
-        /// <param name="storeId">Store identifier for which charge request should be created</param>
-        /// <returns>Transaction and/or errors if exist</returns>
-        public (Transaction, string) Charge(ExtendedChargeRequest chargeRequest, int storeId)
-        {
-            try
-            {
-                var settings = _settingService.LoadSetting<SquarePaymentSettings>(storeId);
-                
-                //try to get the selected location
-                var selectedLocation = GetActiveLocations(storeId).FirstOrDefault(location => location.Id.Equals(settings.LocationId));
-                if (selectedLocation == null)
-                    throw new NopException("Location is a required parameter for payment requests");
-
-                //create transaction API
-                var configuration = CreateApiConfiguration(storeId);
-                var transactionsApi = new TransactionsApi(configuration);
-
-                //create charge transaction
-                var chargeResponse = transactionsApi.Charge(selectedLocation.Id, chargeRequest);
-                if (chargeResponse == null)
-                    throw new NopException("No service response");
-
-                //check whether there are errors in the service response
-                if (chargeResponse.Errors?.Any() ?? false)
-                {
-                    var errorsMessage = string.Join(";", chargeResponse.Errors.Select(error => error.ToString()));
-                    throw new NopException($"There are errors in the service response. {errorsMessage}");
-                }
-
-                return (chargeResponse.Transaction, null);
-            }
-            catch (Exception exception)
-            {
-                //log full error
-                var errorMessage = exception.Message;
-                _logger.Error($"Square payment error: {errorMessage}.", exception, _workContext.CurrentCustomer);
-
-                if (exception is ApiException apiException)
-                {
-                    //try to get error details
-                    var response = JsonConvert.DeserializeObject<ChargeResponse>(apiException.ErrorContent) as ChargeResponse;
-                    if (response?.Errors?.Any() ?? false)
-                        errorMessage = string.Join(";", response.Errors.Select(error => error.Detail));
-                }
-
-                return (null, errorMessage);
-            }
-        }
 
         /// <summary>
         /// Capture authorized transaction
@@ -363,8 +316,8 @@ namespace Nop.Plugin.Payments.Square.Services
                     throw new NopException("Location is a required parameter for payment requests");
 
                 //create transaction API
-                var configuration = CreateApiConfiguration(storeId);
-                var transactionsApi = new TransactionsApi(configuration);
+                var client = CreateClient(storeId);
+                var transactionsApi = client.TransactionsApi;
 
                 //capture transaction by identifier
                 var captureTransactionResponse = transactionsApi.CaptureTransaction(selectedLocation.Id, transactionId);
@@ -390,7 +343,7 @@ namespace Nop.Plugin.Payments.Square.Services
                 if (exception is ApiException apiException)
                 {
                     //try to get error details
-                    var response = JsonConvert.DeserializeObject<CaptureTransactionResponse>(apiException.ErrorContent) as CaptureTransactionResponse;
+                    var response = JsonConvert.DeserializeObject<CaptureTransactionResponse>(apiException.Message) as CaptureTransactionResponse;
                     if (response?.Errors?.Any() ?? false)
                         errorMessage = string.Join(";", response.Errors.Select(error => error.Detail));
                 }
@@ -417,8 +370,8 @@ namespace Nop.Plugin.Payments.Square.Services
                     throw new NopException("Location is a required parameter for payment requests");
 
                 //create transaction API
-                var configuration = CreateApiConfiguration(storeId);
-                var transactionsApi = new TransactionsApi(configuration);
+                var client = CreateClient(storeId);
+                var transactionsApi = client.TransactionsApi;
 
                 //void transaction by identifier
                 var voidTransactionResponse = transactionsApi.VoidTransaction(selectedLocation.Id, transactionId);
@@ -444,7 +397,7 @@ namespace Nop.Plugin.Payments.Square.Services
                 if (exception is ApiException apiException)
                 {
                     //try to get error details
-                    var response = JsonConvert.DeserializeObject<VoidTransactionResponse>(apiException.ErrorContent) as VoidTransactionResponse;
+                    var response = JsonConvert.DeserializeObject<VoidTransactionResponse>(apiException.Message) as VoidTransactionResponse;
                     if (response?.Errors?.Any() ?? false)
                         errorMessage = string.Join(";", response.Errors.Select(error => error.Detail));
                 }
@@ -472,8 +425,8 @@ namespace Nop.Plugin.Payments.Square.Services
                     throw new NopException("Location is a required parameter for payment requests");
 
                 //create transaction API
-                var configuration = CreateApiConfiguration(storeId);
-                var transactionsApi = new TransactionsApi(configuration);
+                var client = CreateClient(storeId);
+                var transactionsApi = client.TransactionsApi;
 
                 //create refund
                 var createRefundResponse = transactionsApi.CreateRefund(selectedLocation.Id, transactionId, refundRequest);
@@ -498,7 +451,7 @@ namespace Nop.Plugin.Payments.Square.Services
                 if (exception is ApiException apiException)
                 {
                     //try to get error details
-                    var response = JsonConvert.DeserializeObject<CreateRefundResponse>(apiException.ErrorContent) as CreateRefundResponse;
+                    var response = JsonConvert.DeserializeObject<CreateRefundResponse>(apiException.Message) as CreateRefundResponse;
                     if (response?.Errors?.Any() ?? false)
                         errorMessage = string.Join(";", response.Errors.Select(error => error.Detail));
                 }

@@ -47,12 +47,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Square.Connect" Version="2.25.0" />
+    <ProjectReference Include="..\..\Presentation\Nop.Web\Nop.Web.csproj" />
+    <ClearPluginAssemblies Include="$(MSBuildProjectDirectory)\..\..\Build\ClearPluginAssemblies.proj" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Presentation\Nop.Web\Nop.Web.csproj" />
-    <ClearPluginAssemblies Include="$(MSBuildProjectDirectory)\..\..\Build\ClearPluginAssemblies.proj" />
+    <PackageReference Include="Square" Version="4.0.0" />
   </ItemGroup>
 
   <!-- This target execute after "Build" target -->

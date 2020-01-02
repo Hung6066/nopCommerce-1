@@ -12,6 +12,7 @@ namespace Nop.Web
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
                     webBuilder.UseStartup<Startup>();
+                    webBuilder.UseIISIntegration();
                 })
                 // Add a new service provider configuration
                 .UseDefaultServiceProvider((context, options) =>

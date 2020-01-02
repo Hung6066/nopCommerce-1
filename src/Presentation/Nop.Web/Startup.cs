@@ -20,8 +20,7 @@ namespace Nop.Web
 
         #region Ctor
 
-        public Startup(IConfiguration configuration,
-            IWebHostEnvironment hostingEnvironment)
+        public Startup(IConfiguration configuration, IWebHostEnvironment hostingEnvironment)
         {
             _configuration = configuration;
             _hostingEnvironment = hostingEnvironment;
@@ -35,6 +34,8 @@ namespace Nop.Web
         /// <param name="services">Collection of service descriptors</param>
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddHealthChecks();
+
             services.ConfigureApplicationServices(_configuration, _hostingEnvironment);
         }
 
@@ -44,6 +45,12 @@ namespace Nop.Web
         /// <param name="application">Builder for configuring an application's request pipeline</param>
         public void Configure(IApplicationBuilder application)
         {
+            application.UseHealthChecks("/health");
+
+            //application.UseRouting();
+            
+            //application.UseCors();
+
             application.ConfigureRequestPipeline();
         }
     }
