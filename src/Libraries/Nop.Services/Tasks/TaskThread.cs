@@ -17,12 +17,15 @@ namespace Nop.Services.Tasks
     /// <summary>
     /// Represents task thread
     /// </summary>
-    public partial class TaskThread : IDisposable
+    public class TaskThread : IDisposable
     {
         #region Fields
 
         private static readonly string _scheduleTaskUrl;
         private static readonly int? _timeout;
+
+        private static HttpClient _client = null;
+
 
         private readonly Dictionary<string, string> _tasks;
         private Timer _timer;
@@ -59,7 +62,6 @@ namespace Nop.Services.Tasks
             StartedUtc = DateTime.UtcNow;
             IsRunning = true;
 
-            HttpClient client = null;
 
             foreach (var taskName in _tasks.Keys)
             {
@@ -67,13 +69,14 @@ namespace Nop.Services.Tasks
                 try
                 {
                     //create and configure client
-                    client = EngineContext.Current.Resolve<IHttpClientFactory>().CreateClient(NopHttpDefaults.DefaultHttpClient);
+
+                    _client = EngineContext.Current.Resolve<IHttpClientFactory>().CreateClient(NopHttpDefaults.DefaultHttpClient);
                     if (_timeout.HasValue)
-                        client.Timeout = TimeSpan.FromMilliseconds(_timeout.Value);
+                        _client.Timeout = TimeSpan.FromMilliseconds(_timeout.Value);
 
                     //send post data
                     var data = new FormUrlEncodedContent(new[] { new KeyValuePair<string, string>(nameof(taskType), taskType) });
-                    client.PostAsync(_scheduleTaskUrl, data).Wait();
+                    _client.PostAsync(_scheduleTaskUrl, data).Wait();
                 }
                 catch (Exception ex)
                 {
@@ -90,14 +93,6 @@ namespace Nop.Services.Tasks
                         message = string.Format(localizationService.GetResource("ScheduleTasks.Error"), taskName, message, taskType, storeContext.CurrentStore.Name, _scheduleTaskUrl);
 
                         logger.Error(message, ex);
-                    }
-                }
-                finally
-                {
-                    if (client != null)
-                    {
-                        client.Dispose();
-                        client = null;
                     }
                 }
             }

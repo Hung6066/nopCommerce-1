@@ -5,7 +5,7 @@ namespace Nop.Core.Infrastructure
     /// <summary>
     /// Provides access to the singleton instance of the Nop engine.
     /// </summary>
-    public class EngineContext
+    public static class EngineContext
     {
         #region Methods
 
