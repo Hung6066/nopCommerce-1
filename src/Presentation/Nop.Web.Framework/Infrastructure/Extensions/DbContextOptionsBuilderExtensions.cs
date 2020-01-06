@@ -22,7 +22,9 @@ namespace Nop.Web.Framework.Infrastructure.Extensions
             var dbContextOptionsBuilder = optionsBuilder.UseLazyLoadingProxies();
 
             var dataSettings = DataSettingsManager.LoadSettings();
-            if (DataSettingsManager.DatabaseIsInstalled)
+            if (!dataSettings?.IsValid ?? true)
+                dbContextOptionsBuilder.UseInMemoryDatabase(NopDataDefaults.InMemoryDatabaseName);
+            else
                 dbContextOptionsBuilder.UseSqlServer(dataSettings.DataConnectionString, option => option.CommandTimeout(nopConfig.SQLCommandTimeout));
         }
     }

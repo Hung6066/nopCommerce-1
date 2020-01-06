@@ -53,7 +53,8 @@ namespace Nop.Web.Framework.Infrastructure.Extensions
         /// <param name="configuration">Configuration of the application</param>
         /// <param name="hostingEnvironment">Hosting environment</param>
         /// <returns>Configured service provider</returns>
-        public static void ConfigureApplicationServices(this IServiceCollection services, IConfiguration configuration, IWebHostEnvironment hostingEnvironment)
+        public static IServiceProvider ConfigureApplicationServices(this IServiceCollection services,
+            IConfiguration configuration, IHostingEnvironment hostingEnvironment)
         {
             //most of API providers require TLS 1.2 nowadays
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
