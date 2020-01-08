@@ -48,6 +48,14 @@ namespace Nop.Core.Rss
             PubDate = new XElement(NopRssDefaults.PubDate, pubDate.ToString("r"));
         }
 
+        /// <summary>
+        /// Default Constructor for JSON serialization.
+        /// </summary>
+        public RssItem()
+        {
+
+        }
+
         #region Methods
 
         /// <summary>

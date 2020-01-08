@@ -28,9 +28,6 @@ namespace Nop.Web.Framework.Infrastructure
             //add Easy caching
             services.AddEasyCaching();
 
-            //add distributed memory cache
-            services.AddDistributedMemoryCache();
-
             //add HTTP sesion state feature
             services.AddHttpSession();
 
@@ -76,6 +73,9 @@ namespace Nop.Web.Framework.Infrastructure
 
             //easy caching
             application.UseEasyCaching();
+
+            //use cache synchronization.
+            application.UseCacheSynchronization();
         }
 
         /// <summary>
